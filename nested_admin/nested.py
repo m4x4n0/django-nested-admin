@@ -102,10 +102,14 @@ class NestedInlineAdminFormsetMixin(object):
         if not isinstance(media, MergeSafeMedia):
             media = MergeSafeMedia(media)
         media = media + self.formset.media
-        for fs in self:
-            media = media + fs.media
-            for inline in (getattr(fs.form, 'inlines', None) or []):
-                media = media + inline.media
+
+        # Below code get an expception "MediaOrderConflictWarning: Detected duplicate Media files in an opposite order" which break an autocomplete posibility.
+        # In a browser a select2 library doesn't work with this error in console - "Select2: An instance of jQuery or a jQuery-compatible library was not found. Make sure that you are including jQuery before Select2 on your web page. select2.full.js:491:13 TypeError: $ is undefined"
+        if django.VERSION < (3,):
+            for fs in self:
+                media = media + fs.media
+                for inline in (getattr(fs.form, 'inlines', None) or []):
+                    media = media + inline.media
 
         min_ext = '' if getattr(settings, 'NESTED_ADMIN_DEBUG', False) else '.min'
 
